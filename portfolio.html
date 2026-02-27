@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORMA — Design & Artwork Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0c0a;
+    --paper: #f5f2ec;
+    --accent: #c8471a;
+    --muted: #9a9589;
+    --line: rgba(13,12,10,0.12);
+    --glass: rgba(245,242,236,0.85);
+    --transition: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* PALETTE THEMES */
+  [data-palette="ash"] {
+    --ink: #2b2b2b;
+    --paper: #e8e5e0;
+    --accent: #7a6e65;
+    --muted: #a09890;
+    --line: rgba(43,43,43,0.12);
+    --glass: rgba(232,229,224,0.88);
+  }
+  [data-palette="moss"] {
+    --ink: #1e2a22;
+    --paper: #dde8dc;
+    --accent: #5a7a52;
+    --muted: #7a9474;
+    --line: rgba(30,42,34,0.12);
+    --glass: rgba(221,232,220,0.88);
+  }
+  [data-palette="dusk"] {
+    --ink: #1c1a2e;
+    --paper: #e2dff0;
+    --accent: #7a6fa8;
+    --muted: #9490b8;
+    --line: rgba(28,26,46,0.12);
+    --glass: rgba(226,223,240,0.88);
+  }
+  [data-palette="sand"] {
+    --ink: #2e2518;
+    --paper: #f0e9d8;
+    --accent: #b08a4e;
+    --muted: #a89070;
+    --line: rgba(46,37,24,0.12);
+    --glass: rgba(240,233,216,0.88);
+  }
+
+  /* Smooth palette transitions */
+  body {
+    transition: background-color 0.8s cubic-bezier(0.25,0.46,0.45,0.94),
+                color 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  nav, .btn-primary, .btn-outline, .filter-btn, .action-btn, .mode-btn {
+    transition: background-color 0.8s, color 0.8s, border-color 0.8s, transform 0.2s;
+  }
+
+  /* PALETTE SWITCHER UI */
+  .palette-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .palette-switcher-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 0.3rem;
+  }
+  .palette-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    cursor: none;
+    border: 2px solid transparent;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    position: relative;
+  }
+  .palette-dot:hover { transform: scale(1.25); }
+  .palette-dot.active {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--paper);
+  }
+  .palette-dot[data-palette="default"] { background: #f5f2ec; border: 2px solid #c8471a; }
+  .palette-dot[data-palette="ash"]     { background: #e8e5e0; border: 2px solid #7a6e65; }
+  .palette-dot[data-palette="moss"]    { background: #dde8dc; border: 2px solid #5a7a52; }
+  .palette-dot[data-palette="dusk"]    { background: #e2dff0; border: 2px solid #7a6fa8; }
+  .palette-dot[data-palette="sand"]    { background: #f0e9d8; border: 2px solid #b08a4e; }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.12s var(--transition);
+    opacity: 0.5;
+  }
+  body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+  body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { transform: translate(-50%,-50%) scale(1.6); opacity: 0.2; }
+
+  /* NOISE TEXTURE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9997;
+    opacity: 0.35;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 3rem;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    letter-spacing: 0.35em;
+    font-weight: 300;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo span { color: var(--accent); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2.5rem;
+  }
+  nav ul a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  nav ul a:hover { color: var(--ink); }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 4rem 6rem 3rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s var(--transition) forwards;
+  }
+
+  h1 {
+    font-size: clamp(3rem, 5vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.4s var(--transition) forwards;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .hero-desc {
+    font-size: 1.1rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 38ch;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.6s var(--transition) forwards;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.9s 0.8s var(--transition) forwards;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 1rem 2.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: background 0.25s, transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-2px); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 1rem 2.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.25s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-outline:hover { background: var(--ink); color: var(--paper); }
+
+  /* HERO CANVAS */
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+  }
+  #hero-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* HERO STATS */
+  .hero-stats {
+    position: absolute;
+    bottom: 3rem;
+    left: 3rem;
+    display: flex;
+    gap: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.9s 1s var(--transition) forwards;
+  }
+  .stat-item { border-left: 1px solid var(--line); padding-left: 1rem; }
+  .stat-num {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.25rem;
+  }
+
+  /* FILTER CONTROLS */
+  #gallery {
+    padding: 8rem 3rem;
+    position: relative;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-title {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .filter-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .filter-btn {
+    background: none;
+    border: 1px solid transparent;
+    padding: 0.4rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: none;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { color: var(--ink); border-color: var(--line); }
+  .filter-btn.active {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* VIEW TOGGLE */
+  .view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+    border-left: 1px solid var(--line);
+    padding-left: 1.5rem;
+  }
+  .view-btn {
+    background: none;
+    border: none;
+    cursor: none;
+    color: var(--muted);
+    font-size: 1rem;
+    transition: color 0.2s;
+    padding: 0.2rem;
+  }
+  .view-btn.active, .view-btn:hover { color: var(--ink); }
+
+  /* GALLERY GRID */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    transition: all 0.4s var(--transition);
+  }
+  .gallery-grid.list-view {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .art-card {
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    aspect-ratio: 4/3;
+    cursor: none;
+    transition: transform 0.4s var(--transition), opacity 0.3s;
+  }
+  .gallery-grid.list-view .art-card {
+    aspect-ratio: 16/5;
+  }
+  .art-card.hidden { display: none; }
+
+  .art-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transition: transform 0.6s var(--transition), filter 0.4s;
+  }
+  .art-card:hover .art-canvas { transform: scale(1.04); filter: brightness(0.7); }
+
+  .art-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(transparent, rgba(13,12,10,0.9));
+    transform: translateY(100%);
+    transition: transform 0.35s var(--transition);
+    color: var(--paper);
+  }
+  .art-card:hover .art-info { transform: translateY(0); }
+
+  .art-title {
+    font-size: 1.2rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.25rem;
+  }
+  .art-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,242,236,0.5);
+  }
+
+  /* MARQUEE */
+  .marquee-section {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    padding: 1.2rem 0;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .marquee-track {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+  }
+  .marquee-item {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 0 3rem;
+    color: rgba(245,242,236,0.4);
+  }
+  .marquee-item span { color: var(--accent); margin-right: 3rem; }
+
+  /* INTERACTIVE CANVAS SECTION */
+  #playground {
+    padding: 8rem 3rem;
+    background: var(--ink);
+    color: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .playground-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4rem;
+  }
+
+  .playground-title {
+    font-size: clamp(2.5rem, 4vw, 4rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .playground-title em { font-style: italic; color: var(--accent); }
+
+  .canvas-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 220px;
+  }
+
+  .control-group label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,242,236,0.4);
+    margin-bottom: 0.6rem;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1px;
+    background: rgba(245,242,236,0.2);
+    outline: none;
+    cursor: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: none;
+  }
+  input[type="range"]:hover { background: rgba(245,242,236,0.4); }
+
+  .color-swatches {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    cursor: none;
+    border: 2px solid transparent;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .swatch:hover, .swatch.active { transform: scale(1.2); border-color: var(--paper); }
+
+  .playground-canvas-wrap {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  #play-canvas {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #111;
+    cursor: crosshair;
+    display: block;
+    border: 1px solid rgba(245,242,236,0.1);
+  }
+
+  .canvas-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .action-btn {
+    background: none;
+    border: 1px solid rgba(245,242,236,0.2);
+    color: rgba(245,242,236,0.6);
+    padding: 0.5rem 1.2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { background: rgba(245,242,236,0.1); color: var(--paper); }
+
+  /* MODE BUTTONS */
+  .mode-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .mode-btn {
+    background: none;
+    border: 1px solid rgba(245,242,236,0.15);
+    color: rgba(245,242,236,0.5);
+    padding: 0.5rem 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .mode-btn:hover { color: var(--paper); border-color: rgba(245,242,236,0.3); }
+  .mode-btn.active { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+  /* ABOUT */
+  #about {
+    padding: 10rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .about-text h2 {
+    font-size: clamp(2.5rem, 3.5vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 2rem;
+  }
+  .about-text h2 em { font-style: italic; color: var(--accent); }
+
+  .about-text p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 1.5rem;
+  }
+
+  .about-visual {
+    position: relative;
+    height: 500px;
+  }
+  #about-canvas { width: 100%; height: 100%; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-copy {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: var(--paper); }
+  ::-webkit-scrollbar-thumb { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">FOR<span>M</span>A</a>
+  <ul>
+    <li><a href="#gallery">Work</a></li>
+    <li><a href="#playground">Playground</a></li>
+    <li><a href="#about">Studio</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="palette-switcher">
+    <span class="palette-switcher-label">Palette</span>
+    <div class="palette-dot active" data-palette="default" title="Original"></div>
+    <div class="palette-dot" data-palette="ash"  title="Ash"></div>
+    <div class="palette-dot" data-palette="moss" title="Moss"></div>
+    <div class="palette-dot" data-palette="dusk" title="Dusk"></div>
+    <div class="palette-dot" data-palette="sand" title="Sand"></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-tag">Design & Artwork Studio — Est. 2024</div>
+    <h1>Where form<br>meets <em>fluid</em><br>precision.</h1>
+    <p class="hero-desc">A curated space for generative art, visual design, and the intersection of code with creative expression.</p>
+    <div class="hero-cta">
+      <a href="#gallery" class="btn-primary">View Work</a>
+      <a href="#playground" class="btn-outline">Create</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">48</div>
+        <div class="stat-label">Artworks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">12</div>
+        <div class="stat-label">Series</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Iterations</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <canvas id="hero-canvas"></canvas>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item"><span>✦</span> Generative Art</span>
+    <span class="marquee-item"><span>✦</span> Visual Systems</span>
+    <span class="marquee-item"><span>✦</span> Motion Design</span>
+    <span class="marquee-item"><span>✦</span> Typography</span>
+    <span class="marquee-item"><span>✦</span> Color Theory</span>
+    <span class="marquee-item"><span>✦</span> Spatial Design</span>
+    <span class="marquee-item"><span>✦</span> Generative Art</span>
+    <span class="marquee-item"><span>✦</span> Visual Systems</span>
+    <span class="marquee-item"><span>✦</span> Motion Design</span>
+    <span class="marquee-item"><span>✦</span> Typography</span>
+    <span class="marquee-item"><span>✦</span> Color Theory</span>
+    <span class="marquee-item"><span>✦</span> Spatial Design</span>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="section-header">
+    <div class="section-title">Selected Works</div>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div class="filter-controls">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="generative">Generative</button>
+        <button class="filter-btn" data-filter="typography">Typography</button>
+        <button class="filter-btn" data-filter="abstract">Abstract</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="grid" title="Grid View">⊞</button>
+        <button class="view-btn" data-view="list" title="List View">☰</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="gallery-grid" id="gallery-grid">
+    <!-- Cards generated by JS -->
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section id="playground">
+  <div class="playground-header">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.3em;text-transform:uppercase;color:rgba(245,242,236,0.3);margin-bottom:1rem;">Interactive Canvas</div>
+      <h2 class="playground-title">Create<br><em>something</em><br>new.</h2>
+    </div>
+  </div>
+
+  <div class="playground-canvas-wrap">
+    <div>
+      <canvas id="play-canvas"></canvas>
+      <div class="canvas-actions">
+        <button class="action-btn" id="clear-btn">Clear</button>
+        <button class="action-btn" id="save-btn">Save PNG</button>
+        <button class="action-btn" id="fill-btn">Fill Random</button>
+      </div>
+    </div>
+
+    <div class="canvas-controls">
+      <div class="control-group">
+        <label>Mode</label>
+        <div class="mode-group">
+          <button class="mode-btn active" data-mode="flow">Flow Lines</button>
+          <button class="mode-btn" data-mode="circles">Circles</button>
+          <button class="mode-btn" data-mode="splatter">Splatter</button>
+          <button class="mode-btn" data-mode="grid">Grid Pixels</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Brush Size — <span id="size-val">18</span></label>
+        <input type="range" id="brush-size" min="5" max="80" value="18">
+      </div>
+
+      <div class="control-group">
+        <label>Opacity — <span id="opacity-val">80</span>%</label>
+        <input type="range" id="brush-opacity" min="10" max="100" value="80">
+      </div>
+
+      <div class="control-group">
+        <label>Color</label>
+        <div class="color-swatches">
+          <div class="swatch active" style="background:#c8471a" data-color="#c8471a"></div>
+          <div class="swatch" style="background:#f5f2ec" data-color="#f5f2ec"></div>
+          <div class="swatch" style="background:#0d0c0a" data-color="#0d0c0a"></div>
+          <div class="swatch" style="background:#4a90d9" data-color="#4a90d9"></div>
+          <div class="swatch" style="background:#7bc67e" data-color="#7bc67e"></div>
+          <div class="swatch" style="background:#e8d44d" data-color="#e8d44d"></div>
+          <div class="swatch" style="background:#9b59b6" data-color="#9b59b6"></div>
+          <div class="swatch" style="background:#e74c3c" data-color="#e74c3c"></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Background</label>
+        <div class="color-swatches">
+          <div class="swatch" style="background:#111111;border:1px solid rgba(255,255,255,0.2)" data-bg="#111111"></div>
+          <div class="swatch" style="background:#f5f2ec;border:1px solid rgba(0,0,0,0.1)" data-bg="#f5f2ec"></div>
+          <div class="swatch" style="background:#1a1a2e" data-bg="#1a1a2e"></div>
+          <div class="swatch" style="background:#0f2027" data-bg="#0f2027"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-text">
+    <h2>Art as a<br><em>living</em> system.</h2>
+    <p>We explore the boundary between algorithmic precision and organic emergence. Every piece begins with a rule — and ends somewhere beautiful and unexpected.</p>
+    <p>Our practice spans generative systems, typographic sculpture, and interactive installations designed for spaces where people pause and feel.</p>
+    <a href="#" class="btn-primary" style="margin-top:1rem;">Learn More</a>
+  </div>
+  <div class="about-visual">
+    <canvas id="about-canvas"></canvas>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-copy">© 2024 FORMA Studio — All works reserved.</div>
+  <div class="footer-copy">Designed with code & care.</div>
+</footer>
+
+<script>
+// ─── CURSOR ───────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animateCursor() {
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ─── HERO CANVAS ──────────────────────────────────────────
+const hc = document.getElementById('hero-canvas');
+const hctx = hc.getContext('2d');
+let hParticles = [];
+
+function resizeHero() {
+  hc.width = hc.offsetWidth;
+  hc.height = hc.offsetHeight;
+}
+resizeHero();
+window.addEventListener('resize', resizeHero);
+
+class HeroParticle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * hc.width;
+    this.y = Math.random() * hc.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.size = Math.random() * 2 + 0.5;
+    this.life = Math.random();
+    this.maxLife = Math.random() * 200 + 100;
+    this.age = 0;
+    this.color = Math.random() > 0.85 ? '#c8471a' : '#9a9589';
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.age++;
+    if (this.age > this.maxLife || this.x < 0 || this.x > hc.width || this.y < 0 || this.y > hc.height) this.reset();
+    this.life = Math.sin((this.age / this.maxLife) * Math.PI);
+  }
+  draw() {
+    hctx.globalAlpha = this.life * 0.7;
+    hctx.fillStyle = this.color;
+    hctx.beginPath();
+    hctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    hctx.fill();
+  }
+}
+
+for (let i = 0; i < 120; i++) hParticles.push(new HeroParticle());
+
+let flowField = [];
+let flowAngle = 0;
+
+function drawHero() {
+  hctx.globalAlpha = 0.04;
+  hctx.fillStyle = '#0d0c0a';
+  hctx.fillRect(0, 0, hc.width, hc.height);
+  hctx.globalAlpha = 1;
+
+  flowAngle += 0.005;
+  const cols = Math.ceil(hc.width / 20);
+  const rows = Math.ceil(hc.height / 20);
+
+  // Draw subtle flow lines
+  hctx.strokeStyle = 'rgba(245,242,236,0.03)';
+  hctx.lineWidth = 1;
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      const x = i * 20;
+      const y = j * 20;
+      const angle = Math.sin(x * 0.01 + flowAngle) * Math.cos(y * 0.01 + flowAngle * 0.7) * Math.PI * 2;
+      hctx.beginPath();
+      hctx.moveTo(x, y);
+      hctx.lineTo(x + Math.cos(angle) * 8, y + Math.sin(angle) * 8);
+      hctx.stroke();
+    }
+  }
+
+  hParticles.forEach(p => { p.update(); p.draw(); });
+
+  // Connect nearby particles
+  hctx.lineWidth = 0.5;
+  for (let i = 0; i < hParticles.length; i++) {
+    for (let j = i + 1; j < hParticles.length; j++) {
+      const dx = hParticles[i].x - hParticles[j].x;
+      const dy = hParticles[i].y - hParticles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 60) {
+        hctx.globalAlpha = (1 - dist/60) * 0.15;
+        hctx.strokeStyle = '#9a9589';
+        hctx.beginPath();
+        hctx.moveTo(hParticles[i].x, hParticles[i].y);
+        hctx.lineTo(hParticles[j].x, hParticles[j].y);
+        hctx.stroke();
+      }
+    }
+  }
+  hctx.globalAlpha = 1;
+
+  requestAnimationFrame(drawHero);
+}
+drawHero();
+
+// ─── GALLERY ──────────────────────────────────────────────
+const artworks = [
+  { title: 'Entropy I', category: 'generative', palette: ['#c8471a','#0d0c0a','#f5f2ec'], type: 'flow' },
+  { title: 'Mono Type', category: 'typography', palette: ['#0d0c0a','#9a9589','#f5f2ec'], type: 'type' },
+  { title: 'Vessel', category: 'abstract', palette: ['#4a90d9','#0d0c0a','#f5f2ec'], type: 'circles' },
+  { title: 'Entropy II', category: 'generative', palette: ['#9b59b6','#1a1a2e','#e8d44d'], type: 'grid' },
+  { title: 'Weight', category: 'typography', palette: ['#f5f2ec','#0d0c0a','#c8471a'], type: 'type' },
+  { title: 'Cascade', category: 'abstract', palette: ['#7bc67e','#0d0c0a','#f5f2ec'], type: 'flow' },
+  { title: 'Grid Study 01', category: 'generative', palette: ['#e8d44d','#0d0c0a','#c8471a'], type: 'grid' },
+  { title: 'Serif', category: 'typography', palette: ['#0d0c0a','#c8471a','#f5f2ec'], type: 'type' },
+  { title: 'Fog', category: 'abstract', palette: ['#9a9589','#f5f2ec','#0d0c0a'], type: 'circles' },
+];
+
+const grid = document.getElementById('gallery-grid');
+
+function generateArt(canvas, type, palette) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth || 400;
+  const h = canvas.height = canvas.offsetHeight || 300;
+
+  ctx.fillStyle = palette[1];
+  ctx.fillRect(0, 0, w, h);
+
+  if (type === 'flow') {
+    for (let i = 0; i < 60; i++) {
+      ctx.beginPath();
+      let x = Math.random() * w, y = Math.random() * h;
+      ctx.moveTo(x, y);
+      for (let s = 0; s < 80; s++) {
+        const angle = Math.sin(x * 0.02) * Math.cos(y * 0.02) * Math.PI * 2;
+        x += Math.cos(angle) * 4;
+        y += Math.sin(angle) * 4;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = palette[i % 2 === 0 ? 0 : 2];
+      ctx.globalAlpha = 0.15 + Math.random() * 0.3;
+      ctx.lineWidth = Math.random() * 1.5 + 0.3;
+      ctx.stroke();
+    }
+  } else if (type === 'circles') {
+    for (let i = 0; i < 40; i++) {
+      const r = Math.random() * Math.min(w,h) * 0.25 + 5;
+      ctx.beginPath();
+      ctx.arc(Math.random()*w, Math.random()*h, r, 0, Math.PI*2);
+      ctx.strokeStyle = palette[i % 3 === 0 ? 0 : i % 3 === 1 ? 2 : 2];
+      ctx.globalAlpha = 0.2 + Math.random() * 0.5;
+      ctx.lineWidth = Math.random() * 2 + 0.5;
+      ctx.stroke();
+    }
+  } else if (type === 'grid') {
+    const cols = 12, rows = 9;
+    const cw = w / cols, ch = h / rows;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        if (Math.random() > 0.4) {
+          ctx.fillStyle = palette[Math.floor(Math.random()*3)];
+          ctx.globalAlpha = 0.3 + Math.random() * 0.7;
+          ctx.fillRect(i * cw + 1, j * ch + 1, cw - 2, ch - 2);
+        }
+      }
+    }
+  } else if (type === 'type') {
+    ctx.font = `${Math.random() > 0.5 ? 'italic ' : ''}${w * 0.5}px Cormorant Garamond`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = 0.08 + Math.random() * 0.1;
+    ctx.fillStyle = palette[0];
+    const chars = ['A','M','O','G','R','E','S'];
+    ctx.fillText(chars[Math.floor(Math.random()*chars.length)], w/2, h/2);
+    ctx.globalAlpha = 1;
+    ctx.font = `300 ${w * 0.08}px Cormorant Garamond`;
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = palette[2];
+    ctx.fillText('FORMA STUDIO', w/2, h * 0.75);
+  }
+  ctx.globalAlpha = 1;
+}
+
+artworks.forEach(art => {
+  const card = document.createElement('div');
+  card.className = 'art-card';
+  card.dataset.category = art.category;
+  card.innerHTML = `
+    <canvas class="art-canvas"></canvas>
+    <div class="art-info">
+      <div class="art-title">${art.title}</div>
+      <div class="art-meta">${art.category} · 2024</div>
+    </div>`;
+  grid.appendChild(card);
+
+  const c = card.querySelector('canvas');
+  setTimeout(() => {
+    c.width = c.offsetWidth || card.offsetWidth;
+    c.height = c.offsetHeight || card.offsetHeight;
+    generateArt(c, art.type, art.palette);
+  }, 100);
+});
+
+// Filter
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('.art-card').forEach(card => {
+      if (filter === 'all' || card.dataset.category === filter) {
+        card.classList.remove('hidden');
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+  });
+});
+
+// View toggle
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.view === 'list') {
+      grid.classList.add('list-view');
+    } else {
+      grid.classList.remove('list-view');
+    }
+  });
+});
+
+// ─── PLAYGROUND CANVAS ────────────────────────────────────
+const pc = document.getElementById('play-canvas');
+const pctx = pc.getContext('2d');
+let drawMode = 'flow';
+let brushColor = '#c8471a';
+let brushSize = 18;
+let brushOpacity = 0.8;
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+function initPlayCanvas(bg = '#111111') {
+  pc.width = pc.offsetWidth;
+  pc.height = pc.offsetHeight;
+  pctx.fillStyle = bg;
+  pctx.fillRect(0, 0, pc.width, pc.height);
+}
+initPlayCanvas();
+
+pc.addEventListener('mousedown', e => {
+  isDrawing = true;
+  const r = pc.getBoundingClientRect();
+  lastX = e.clientX - r.left;
+  lastY = e.clientY - r.top;
+});
+pc.addEventListener('mouseup', () => isDrawing = false);
+pc.addEventListener('mouseleave', () => isDrawing = false);
+pc.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const r = pc.getBoundingClientRect();
+  const x = e.clientX - r.left;
+  const y = e.clientY - r.top;
+
+  pctx.globalAlpha = brushOpacity;
+  pctx.fillStyle = brushColor;
+  pctx.strokeStyle = brushColor;
+
+  if (drawMode === 'flow') {
+    pctx.beginPath();
+    pctx.moveTo(lastX, lastY);
+    pctx.lineTo(x, y);
+    pctx.lineWidth = brushSize;
+    pctx.lineCap = 'round';
+    pctx.lineJoin = 'round';
+    pctx.stroke();
+  } else if (drawMode === 'circles') {
+    for (let i = 0; i < 3; i++) {
+      const ox = (Math.random() - 0.5) * brushSize * 0.5;
+      const oy = (Math.random() - 0.5) * brushSize * 0.5;
+      const r2 = Math.random() * brushSize * 0.5 + 2;
+      pctx.beginPath();
+      pctx.arc(x + ox, y + oy, r2, 0, Math.PI * 2);
+      pctx.globalAlpha = brushOpacity * (0.3 + Math.random() * 0.7);
+      pctx.fill();
+    }
+  } else if (drawMode === 'splatter') {
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * brushSize * 1.5;
+      pctx.beginPath();
+      pctx.arc(x + Math.cos(angle)*dist, y + Math.sin(angle)*dist, Math.random() * 4 + 1, 0, Math.PI*2);
+      pctx.globalAlpha = brushOpacity * Math.random() * 0.7;
+      pctx.fill();
+    }
+  } else if (drawMode === 'grid') {
+    const snap = brushSize;
+    const gx = Math.round(x / snap) * snap;
+    const gy = Math.round(y / snap) * snap;
+    pctx.fillRect(gx - snap/2, gy - snap/2, snap - 1, snap - 1);
+  }
+
+  pctx.globalAlpha = 1;
+  lastX = x;
+  lastY = y;
+});
+
+// Controls
+document.getElementById('brush-size').addEventListener('input', function() {
+  brushSize = +this.value;
+  document.getElementById('size-val').textContent = this.value;
+});
+document.getElementById('brush-opacity').addEventListener('input', function() {
+  brushOpacity = +this.value / 100;
+  document.getElementById('opacity-val').textContent = this.value;
+});
+
+document.querySelectorAll('.swatch[data-color]').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.swatch[data-color]').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    brushColor = s.dataset.color;
+  });
+});
+
+document.querySelectorAll('[data-bg]').forEach(s => {
+  s.addEventListener('click', () => {
+    const bg = s.dataset.bg;
+    const imgData = pctx.getImageData(0, 0, pc.width, pc.height);
+    pctx.fillStyle = bg;
+    pctx.fillRect(0, 0, pc.width, pc.height);
+    pctx.putImageData(imgData, 0, 0);
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    drawMode = btn.dataset.mode;
+  });
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => initPlayCanvas('#111111'));
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = 'forma-artwork.png';
+  a.href = pc.toDataURL();
+  a.click();
+});
+
+document.getElementById('fill-btn').addEventListener('click', () => {
+  const modes = ['flow', 'circles', 'splatter', 'grid'];
+  const colors = ['#c8471a','#f5f2ec','#4a90d9','#7bc67e','#e8d44d','#9b59b6'];
+  const prevMode = drawMode;
+  const prevColor = brushColor;
+  for (let i = 0; i < 40; i++) {
+    drawMode = modes[Math.floor(Math.random()*modes.length)];
+    brushColor = colors[Math.floor(Math.random()*colors.length)];
+    brushOpacity = 0.2 + Math.random() * 0.6;
+    const x = Math.random() * pc.width;
+    const y = Math.random() * pc.height;
+    const fake = new MouseEvent('mousemove', {clientX: x + pc.getBoundingClientRect().left, clientY: y + pc.getBoundingClientRect().top});
+    isDrawing = true;
+    lastX = x; lastY = y;
+    pc.dispatchEvent(fake);
+  }
+  isDrawing = false;
+  drawMode = prevMode;
+  brushColor = prevColor;
+  brushOpacity = +document.getElementById('brush-opacity').value / 100;
+});
+
+// ─── ABOUT CANVAS ─────────────────────────────────────────
+const ac = document.getElementById('about-canvas');
+const actx = ac.getContext('2d');
+ac.width = ac.offsetWidth || 500;
+ac.height = ac.offsetHeight || 500;
+
+let aboutT = 0;
+function drawAbout() {
+  actx.fillStyle = 'rgba(245,242,236,0.05)';
+  actx.fillRect(0, 0, ac.width, ac.height);
+  aboutT += 0.008;
+
+  const cx = ac.width / 2, cy = ac.height / 2;
+  for (let i = 0; i < 5; i++) {
+    const r = 80 + i * 50;
+    const pts = 6 + i * 2;
+    actx.beginPath();
+    for (let p = 0; p <= pts; p++) {
+      const angle = (p / pts) * Math.PI * 2 + aboutT * (i % 2 === 0 ? 1 : -1) * 0.5;
+      const pr = r + Math.sin(aboutT * 2 + i + p) * 20;
+      const px = cx + Math.cos(angle) * pr;
+      const py = cy + Math.sin(angle) * pr;
+      p === 0 ? actx.moveTo(px, py) : actx.lineTo(px, py);
+    }
+    actx.closePath();
+    actx.strokeStyle = i === 0 ? '#c8471a' : '#0d0c0a';
+    actx.globalAlpha = 0.3 - i * 0.04;
+    actx.lineWidth = 1.5 - i * 0.2;
+    actx.stroke();
+  }
+  actx.globalAlpha = 1;
+  requestAnimationFrame(drawAbout);
+}
+drawAbout();
+
+// ─── PALETTE SWITCHER ─────────────────────────────────────
+document.querySelectorAll('.palette-dot').forEach(dot => {
+  dot.addEventListener('click', () => {
+    document.querySelectorAll('.palette-dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+    const palette = dot.dataset.palette;
+    if (palette === 'default') {
+      document.documentElement.removeAttribute('data-palette');
+      document.body.removeAttribute('data-palette');
+    } else {
+      document.documentElement.setAttribute('data-palette', palette);
+      document.body.setAttribute('data-palette', palette);
+    }
+  });
+});
+</script>
+</body>
+</html>
